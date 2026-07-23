@@ -43,3 +43,40 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Secrets & environment
+.env
+.env.*
+!.env.example
+secrets/
+keys/
+
+# Android signing
+android/key.properties
+android/app/*.jks
+android/app/*.keystore
+android/app/upload-keystore.jks
+android/app/release.keystore
+
+# iOS / macOS signing & provisioning
+*.mobileprovision
+*.p12
+*.pem
+*.cer
+*.certSigningRequest
+ios/Runner/GoogleService-Info.plist
+macos/Runner/GoogleService-Info.plist
+
+# Firebase / Google service accounts
+service-account.json
+service-account*.json
+google-services.json
+firebase-adminsdk*.json
+.firebase/
+
+# Generic private keys / secrets
+*.key
+*_rsa
+*_dsa
+*_ed25519
+*_ecdsa
