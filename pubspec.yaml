@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 0.2.0-dev+6
+version: 0.2.1-dev+7
 
 environment:
   sdk: ^3.12.2
@@ -55,6 +55,7 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
+  # Pinned: build_runner >=2.15.2 needs analyzer >=13.3, incompatible with riverpod_generator 4.0.4 (analyzer ^12). Relax when riverpod_generator ships an analyzer 13+ release.
   build_runner: ^2.15.1
   riverpod_generator: ^4.0.4
   drift_dev: ^2.34.0
