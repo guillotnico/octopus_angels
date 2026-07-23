@@ -10,6 +10,70 @@ Flutter application for marine wildlife observation and citizen science. Current
 - Lints: `package:flutter_lints/flutter.yaml` (via `analysis_options.yaml`)
 - Targets: Android, iOS, Web (directories present)
 
+## Architecture (mandatory)
+
+The app follows **Clean Architecture** with a strict layer split, an **offline-first** data flow, and a fixed stack for state, navigation, storage, and sync. Any new feature must respect this spine — no shortcuts around a layer.
+
+### Fixed stack
+
+| Concern              | Package / Service                                       | Role                                                                              |
+|----------------------|---------------------------------------------------------|-----------------------------------------------------------------------------------|
+| State management     | `flutter_riverpod` + `riverpod_annotation` (Riverpod 2) | All app state and DI via providers. Prefer code-generated providers.              |
+| Navigation           | `go_router`                                             | Declarative routing; a single `GoRouter` exposed through a Riverpod provider.     |
+| Local database       | `drift` (+ `drift_flutter`, `sqlite3_flutter_libs`)     | **Source of truth for reads.** All UI queries go through Drift.                   |
+| Remote sync          | `cloud_firestore`                                       | Bidirectional sync between Drift and Firestore. UI never reads Firestore directly.|
+| Image storage        | `firebase_storage`                                      | Upload/download of image assets. Only URLs/paths are persisted in Drift/Firestore.|
+| Firebase bootstrap   | `firebase_core`                                         | Initialize before `runApp` in `main.dart`.                                        |
+
+### Layers
+
+- `lib/domain/` — **pure Dart**. No Flutter, Firebase, or Drift imports.
+  - `entities/` — plain business models.
+  - `repositories/` — abstract repository interfaces.
+  - `usecases/` — one class per business action; depends only on repository interfaces.
+- `lib/data/` — implementation details.
+  - `local/` — Drift database, tables, DAOs (`*.drift.dart` generated files stay next to their source).
+  - `remote/` — Firestore and Firebase Storage wrappers, DTOs, JSON converters.
+  - `repositories/` — concrete `XxxRepositoryImpl` implementing domain interfaces; orchestrates local + remote.
+- `lib/presentation/` — UI.
+  - `screens/` — one file per screen (see widget rule).
+  - `widgets/` — reusable UI components (one file per widget).
+  - `providers/` — Riverpod providers (state, notifiers, use case injection).
+  - `router/` — `GoRouter` config and route constants.
+- `lib/core/` — cross-cutting utilities (logging, error types, extension methods, `Result`/`Failure` sealed classes).
+
+**Dependency direction:** `presentation → domain ← data`. Presentation and data both depend on domain; domain depends on nothing outside pure Dart.
+
+### Offline-first data flow
+
+The app must remain fully usable without network. Rules:
+
+1. **Reads** — UI reads from Drift via a Riverpod `StreamProvider` bound to a DAO stream. Never read from Firestore in the presentation layer.
+2. **Writes** — mutations write to Drift immediately with a sync marker (e.g. `isSynced = false`, `updatedAt`). A background sync worker pushes pending rows to Firestore.
+3. **Remote hydration** — Firestore listeners (or scheduled fetches) update Drift; the UI reacts through the Drift stream.
+4. **Conflict resolution** — last-writer-wins by `updatedAt` unless a use case defines otherwise. Document the strategy on each entity.
+5. **Images** — upload to Firebase Storage → get the download URL → store the URL (not the bytes) in Drift and Firestore. If offline, queue the upload; never block the save.
+6. **Auth boundary** — every user-scoped entity carries an `ownerUid`. Data is filtered by `ownerUid` at the DAO level so logout/login cannot leak rows across accounts.
+
+### Riverpod conventions
+
+- Prefer **code-generated providers** (`@riverpod` from `riverpod_annotation`).
+- Use `Notifier` / `AsyncNotifier` for mutable state; `StreamProvider` for Drift streams; `FutureProvider` for one-shot async.
+- No ambient globals. No `context.read` outside gestures/callbacks.
+- Providers live in `lib/presentation/providers/` (UI-facing) or next to their owning data source (infra).
+
+### go_router conventions
+
+- Single `GoRouter` instance exposed via a `routerProvider` (Riverpod).
+- Route paths declared as constants (`class Routes { static const home = '/'; ... }`) — no string literals in `context.go(...)` calls.
+- Auth / onboarding gating via `redirect`, backed by Riverpod state.
+
+### Firebase configuration
+
+- All Firebase config comes from `flutterfire configure` output (`firebase_options.dart`). Never hardcode API keys in source.
+- Production `google-services.json` and `GoogleService-Info.plist` are treated as secrets (git-ignored — see security rules).
+- `firestore.rules`, `firestore.indexes.json`, `storage.rules`, `firebase.json`, `.firebaserc` are versioned in the repo.
+
 ## Commands
 
 ```bash
