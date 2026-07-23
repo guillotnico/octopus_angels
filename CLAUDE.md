@@ -18,9 +18,9 @@ The app follows **Clean Architecture** with a strict layer split, an **offline-f
 
 | Concern              | Package / Service                                       | Role                                                                              |
 |----------------------|---------------------------------------------------------|-----------------------------------------------------------------------------------|
-| State management     | `flutter_riverpod` + `riverpod_annotation` (Riverpod 2) | All app state and DI via providers. Prefer code-generated providers.              |
+| State management     | `flutter_riverpod` + `riverpod_annotation` (Riverpod 3) | All app state and DI via providers. Prefer code-generated providers.              |
 | Navigation           | `go_router`                                             | Declarative routing; a single `GoRouter` exposed through a Riverpod provider.     |
-| Local database       | `drift` (+ `drift_flutter`, `sqlite3_flutter_libs`)     | **Source of truth for reads.** All UI queries go through Drift.                   |
+| Local database       | `drift` (+ `drift_flutter`)                             | **Source of truth for reads.** All UI queries go through Drift. `sqlite3_flutter_libs` comes transitively via `drift_flutter`. |
 | Remote sync          | `cloud_firestore`                                       | Bidirectional sync between Drift and Firestore. UI never reads Firestore directly.|
 | Image storage        | `firebase_storage`                                      | Upload/download of image assets. Only URLs/paths are persisted in Drift/Firestore.|
 | Firebase bootstrap   | `firebase_core`                                         | Initialize before `runApp` in `main.dart`.                                        |
@@ -57,10 +57,11 @@ The app must remain fully usable without network. Rules:
 
 ### Riverpod conventions
 
-- Prefer **code-generated providers** (`@riverpod` from `riverpod_annotation`).
+- Prefer **code-generated providers** (`@riverpod` from `riverpod_annotation`). Regenerate with `dart run build_runner build --delete-conflicting-outputs` (or `watch` during dev).
 - Use `Notifier` / `AsyncNotifier` for mutable state; `StreamProvider` for Drift streams; `FutureProvider` for one-shot async.
 - No ambient globals. No `context.read` outside gestures/callbacks.
 - Providers live in `lib/presentation/providers/` (UI-facing) or next to their owning data source (infra).
+- **`riverpod_lint` is intentionally NOT installed yet**: as of the current pin, its published range is incompatible with `riverpod_annotation ^4` + Riverpod 3.3. Reintroduce it (with `custom_lint`) as soon as the upstream constraints catch up.
 
 ### go_router conventions
 
