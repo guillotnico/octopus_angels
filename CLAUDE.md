@@ -33,6 +33,21 @@ flutter build web                     # web release build
 
 Fix these before running `flutter analyze` / `flutter test` or the counter smoke test in `test/widget_test.dart` will fail to build.
 
+## Widget file organization (mandatory)
+
+Every screen and every widget lives in its **own dedicated Dart file**. This rule is non-negotiable.
+
+- Exactly **one** public widget per file — either a `StatelessWidget` or a `StatefulWidget`. Never two independent widgets in the same file.
+- The private `State<...>` class of a `StatefulWidget` MUST stay in the same file as its widget: it is the paired implementation of that single widget, not a second widget.
+- Small private helper widgets used only inside one screen are still separate files — extract them.
+- File name = `snake_case` of the widget class name (e.g. `HomeScreen` → `home_screen.dart`, `SightingCard` → `sighting_card.dart`).
+- Suggested layout:
+  - `lib/screens/` — `Scaffold`-level pages (one file per screen).
+  - `lib/widgets/` — reusable UI components (one file per widget).
+  - `lib/main.dart` — app entry point only (`runApp` + root `MaterialApp` widget).
+
+**Follow-up on the starter:** `lib/main.dart` currently declares both `MyApp` and `MyHomePage` in the same file. As soon as real work begins, split `MyHomePage` into `lib/screens/home_screen.dart` and keep `MyApp` (or its replacement) alone in `main.dart`.
+
 ## Versioning policy (mandatory)
 
 Every modification (code, config, assets, docs) MUST bump the version in `pubspec.yaml` **before** committing. The scheme is extended SemVer:
