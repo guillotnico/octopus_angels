@@ -44,19 +44,24 @@ MAJOR.MINOR.PATCH[-lifecycle]+BUILD
 - `MAJOR` (X): breaking changes, major redesign, new product milestone.
 - `MINOR` (Y): grouped set of new backward-compatible features.
 - `PATCH` (Z): bug fix, small change, config, docs, refactor, chore.
-- `BUILD` (`+N`): monotonically increasing integer — maps to Android `versionCode` and iOS `CFBundleVersion`. **Always increment**, even for a pre-release re-tag.
+- `BUILD` (`+N`): monotonically increasing integer — maps to Android `versionCode` and iOS `CFBundleVersion`. **Always increment**, even for a pre-release re-tag or a MAJOR/MINOR bump.
 
 Hierarchy between major and minor is a functional call: features are grouped into a coherent "lot" and the tier reflects how structural that lot is.
 
+**Initial development convention:** while the app has not yet reached its first stable/production release, `MAJOR` MUST stay at `0` (`0.MINOR.PATCH`). Promotion to `1.0.0` happens only for the first release considered stable and production-ready. During `0.x.x`:
+- `MINOR` bump when a new feature lot lands.
+- `PATCH` bump for fixes, chores, config, docs.
+- Breaking changes are allowed without a `MAJOR` bump (SemVer 0.x carries no stability guarantee); still, bump `MINOR` to signal them.
+
 Lifecycle suffix (optional, marks maturity):
 
-| Suffix     | Example         | Meaning                                                                 |
-|------------|-----------------|-------------------------------------------------------------------------|
-| `-dev`     | `1.5.1-dev+7`   | Work in progress, internal only.                                        |
-| `-alpha`   | `1.5.1-alpha+8` | Features incomplete, bugs expected. POC / early internal testing.       |
-| `-beta`    | `1.5.1-beta+9`  | Nearly complete, may still bug. Restricted external testing.            |
-| `-rcN`     | `1.5.1-rc1+10`  | Feature-complete release candidate. Iterate `rc1`, `rc2`, ...           |
-| *(none)*   | `1.5.1+11`      | Stable, production-ready. Equivalent to an explicit `-stable`.          |
+| Suffix     | Example          | Meaning                                                                 |
+|------------|------------------|-------------------------------------------------------------------------|
+| `-dev`     | `0.1.0-dev+3`    | Work in progress, internal only.                                        |
+| `-alpha`   | `0.3.0-alpha+18` | Features incomplete, bugs expected. POC / early internal testing.       |
+| `-beta`    | `0.6.0-beta+42`  | Nearly complete, may still bug. Restricted external testing.            |
+| `-rcN`     | `0.9.0-rc1+80`   | Feature-complete release candidate. Iterate `rc1`, `rc2`, ...           |
+| *(none)*   | `1.0.0+81`       | Stable, production-ready. Equivalent to an explicit `-stable`.          |
 
 Rules of thumb:
 - Any change while a version is under development → bump `PATCH`, keep `-dev`, increment `+BUILD`.
@@ -73,7 +78,7 @@ Commit after **every** modification, once the version has been bumped. Rules:
   - Add `!` after the type/scope for breaking changes (e.g. `feat(auth)!: ...`).
 - Subject ≤ 72 chars, imperative mood ("add", not "added"/"adds"), no trailing period.
 - Body (optional, wrap ~72 cols): explain the **why** and non-obvious **what**, not the how.
-- Reference the new version in the body when meaningful (e.g. `Bumps version to 1.0.1-dev+2.`).
+- Reference the new version in the body when meaningful (e.g. `Bumps version to 0.1.0-dev+3.`).
 - Stage explicitly: prefer `git add <file>` over `git add -A`/`git add .` to avoid pulling in secrets.
 - Never `--no-verify`, never `--no-gpg-sign`, never amend a pushed commit.
 - Always include the `Co-Authored-By: Claude ...` trailer required by Claude Code.
@@ -87,7 +92,7 @@ Ignore .env variants, Android/iOS signing artefacts, Firebase service
 accounts and private keys. Add .env.example as the documented entry
 point for future third-party services.
 
-Bumps version to 1.0.1-dev+2.
+Bumps version to 0.1.0-dev+3.
 
 Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>
 ```
